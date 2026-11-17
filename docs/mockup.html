@@ -1,0 +1,411 @@
+<title>Skyline Booking Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: workshop view. Left = the traveller's screen, right = the API inspector showing what the backend calls at each step. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#0e1e2b; --muted:#5b6b78; --line:#d9e0e6;
+  --flight:#0a6e8a; --flight-soft:#dcf0f5; --hotel:#b45f06; --hotel-soft:#fbe9d3;
+  --good:#1a7f4b; --good-soft:#dff3e8; --warn:#9a6700; --code-bg:#0e1e2b; --code-fg:#cfe3ee; --code-key:#7fd0e6; --code-str:#f2c879;
+  --font-d:'Space Grotesk',system-ui,sans-serif; --font-b:'Inter',system-ui,sans-serif; --font-m:'JetBrains Mono',ui-monospace,monospace;
+  --accent:var(--flight); --accent-soft:var(--flight-soft);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a141c; --surface:#112230; --ink:#e6eef3; --muted:#93a6b4; --line:#223648;
+  --flight:#4cc0dc; --flight-soft:#12333f; --hotel:#f0a24b; --hotel-soft:#3a2810;
+  --good:#58d08e; --good-soft:#12342388; --warn:#e9b44c; --code-bg:#07101a; --code-fg:#cfe3ee; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a141c; --surface:#112230; --ink:#e6eef3; --muted:#93a6b4; --line:#223648;
+  --flight:#4cc0dc; --flight-soft:#12333f; --hotel:#f0a24b; --hotel-soft:#3a2810;
+  --good:#58d08e; --good-soft:#12342388; --warn:#e9b44c; --code-bg:#07101a; --code-fg:#cfe3ee; color-scheme:dark}
+body[data-mode="hotel"]{--accent:var(--hotel);--accent-soft:var(--hotel-soft)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:14px;line-height:1.5;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:16px}
+header.top{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:end}
+header.top h1{font-size:26px}
+header.top p{margin:2px 0 0;color:var(--muted);max-width:68ch}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;background:var(--accent-soft);color:var(--accent)}
+.chip.am{background:var(--flight-soft);color:var(--flight)} .chip.other{background:var(--hotel-soft);color:var(--hotel)} .chip.own{background:var(--good-soft);color:var(--good)}
+.stepper{display:flex;gap:4px;flex-wrap:wrap}
+.stepper button{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:8px;font-size:13px;color:var(--muted)}
+.stepper button[aria-current="step"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.stepper button.done{color:var(--ink)}
+.stage{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:960px){.stage{grid-template-columns:minmax(0,1fr)}}
+.screen{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.screen-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.brand{font-family:var(--font-d);font-weight:700;font-size:16px;letter-spacing:.2px}
+.brand b{color:var(--accent)}
+.tabs{display:flex;gap:4px;background:var(--bg);padding:3px;border-radius:10px}
+.tabs button{border:0;background:none;padding:6px 14px;border-radius:8px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px #0002}
+.pane{padding:16px;display:grid;gap:14px}
+.pane h2{font-size:19px}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+label.f{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:0}
+label.f input,label.f select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 10px;font-size:15px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink);width:100%}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:10px 18px;font-weight:600}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.offer{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;background:var(--surface);text-align:left;width:100%}
+.offer:hover{border-color:var(--accent)}
+.offer[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.offer .line{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.time{font-family:var(--font-d);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.path{display:grid;gap:2px;text-align:center;color:var(--muted);font-size:12px}
+.path i{display:block;height:2px;background:var(--line);position:relative;margin:2px 0}
+.path i::after{content:"";position:absolute;right:-1px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.price{font-family:var(--font-d);font-weight:700;font-size:20px;text-align:right;font-variant-numeric:tabular-nums}
+.meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--muted)}
+.tag{padding:2px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--line)}
+.tag.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:none;border-radius:99px;padding:4px 12px;font-size:12px}
+.filters button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+/* seat map */
+.cabin{display:grid;gap:6px;justify-content:center;padding:14px;background:var(--bg);border-radius:30px 30px 10px 10px;overflow-x:auto}
+.srow{display:grid;grid-template-columns:repeat(3,28px) 22px repeat(3,28px);gap:5px;align-items:center;justify-content:center}
+.srow .n{font-size:10px;color:var(--muted);text-align:center}
+.seat{height:28px;border-radius:6px 6px 3px 3px;border:1.5px solid var(--accent);background:var(--surface);font-size:10px;font-weight:600;color:var(--accent);padding:0}
+.seat.taken{background:var(--line);border-color:transparent;color:transparent;cursor:not-allowed}
+.seat.prem{background:var(--accent-soft)}
+.seat.sel{background:var(--accent);color:#fff}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.key span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;border:1.5px solid var(--accent);margin-right:6px;vertical-align:-2px;background:var(--surface)}
+.key .t::before{background:var(--line);border-color:transparent}.key .p::before{background:var(--accent-soft)}.key .s::before{background:var(--accent)}
+.sum{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;background:var(--bg)}
+.sum div{display:flex;justify-content:space-between;gap:10px}
+.sum .tot{font-weight:700;font-size:16px;border-top:1px dashed var(--line);padding-top:8px;font-family:var(--font-d)}
+.pass{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
+.pay-methods{display:flex;gap:8px;flex-wrap:wrap}
+.pay-methods button{border:1px solid var(--line);background:none;padding:8px 14px;border-radius:8px;font-weight:500}
+.pay-methods button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.ticket{border:2px dashed var(--accent);border-radius:14px;padding:16px;display:grid;gap:12px}
+.ticket .big{font-family:var(--font-d);font-size:34px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.barcode{height:52px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 5px,transparent 5px 8px,var(--ink) 8px 11px,transparent 11px 13px);border-radius:3px;opacity:.85}
+.ok{color:var(--good);font-weight:600}
+/* inspector */
+.insp{background:var(--surface);border:1px solid var(--line);border-radius:14px;display:grid;overflow:hidden;position:sticky;top:12px}
+@media(max-width:960px){.insp{position:static}}
+.insp-h{padding:12px 16px;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.insp-h h3{font-size:15px}
+.call{padding:12px 16px;display:grid;gap:8px;border-bottom:1px solid var(--line)}
+.call:last-child{border-bottom:0}
+.verb{font-family:var(--font-m);font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.verb b{background:var(--ink);color:var(--surface);padding:1px 7px;border-radius:5px;font-weight:500}
+.verb code{overflow-wrap:anywhere;color:var(--ink)}
+.call p{margin:0;color:var(--muted);font-size:13px}
+pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:8px;padding:10px 12px;font:12px/1.55 var(--font-m);overflow-x:auto;max-height:260px}
+pre .k{color:var(--code-key)} pre .s{color:var(--code-str)}
+details summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--accent)}
+.arch{display:grid;gap:10px}
+.arch-flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}
+.arch-flow span.node{padding:4px 10px;border-radius:7px;border:1px solid var(--line);background:var(--surface);font-weight:500}
+.arch-flow span.arrow{color:var(--muted)}
+.notice{border-left:3px solid var(--hotel);background:var(--hotel-soft);padding:8px 12px;border-radius:0 8px 8px 0;font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:9px;font-size:13px;z-index:20}
+@media(prefers-reduced-motion:no-preference){.pane{animation:in .25s ease}@keyframes in{from{opacity:.4;transform:translateY(4px)}}}
+.score{background:var(--hotel);color:#fff;border-radius:7px;padding:2px 8px;font-weight:700;font-family:var(--font-d)}
+.gallery{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;height:110px}
+.gallery i{border-radius:10px;background:linear-gradient(135deg,var(--hotel-soft),var(--line))}
+.gallery i:first-child{background:linear-gradient(135deg,var(--hotel),var(--hotel-soft))}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Skyline: flight and hotel booking</h1>
+      <p>Clickable mockup of the traveller journey. The right panel shows the backend call behind every screen. Flights and hotels both come from the Amadeus Self-Service APIs, so one integration and one set of keys cover the whole product.</p>
+    </div>
+    <div class="legend"><span class="chip am">Amadeus API</span><span class="chip own">Your backend</span></div>
+  </header>
+
+  <nav class="stepper" id="stepper" aria-label="Booking steps"></nav>
+
+  <div class="stage">
+    <section class="screen" aria-label="Traveller screen">
+      <div class="screen-bar">
+        <span class="brand">Sky<b>line</b></span>
+        <div class="tabs" role="tablist" aria-label="Travel mode">
+          <button role="tab" id="tab-flight" aria-selected="true">Flights</button>
+          <button role="tab" id="tab-hotel" aria-selected="false">Hotels</button>
+        </div>
+      </div>
+      <div class="pane" id="pane"></div>
+    </section>
+
+    <aside class="insp" aria-label="API inspector">
+      <div class="insp-h"><h3 id="insp-title"></h3><div id="insp-chips"></div></div>
+      <div id="insp-body"></div>
+    </aside>
+  </div>
+
+  <section class="screen">
+    <div class="pane arch">
+      <h2>How the pieces fit</h2>
+      <div class="arch-flow">
+        <span class="node">Web / mobile app</span><span class="arrow">→</span>
+        <span class="node">Your backend (keeps API keys, caches, holds bookings)</span><span class="arrow">→</span>
+        <span class="node" style="border-color:var(--flight);color:var(--flight)">Amadeus: flights</span>
+        <span class="arrow">+</span>
+        <span class="node" style="border-color:var(--hotel);color:var(--hotel)">Amadeus: hotels</span>
+        <span class="arrow">+</span>
+        <span class="node">Payment gateway</span><span class="arrow">+</span><span class="node">Email / SMS</span>
+      </div>
+      <div class="grid2">
+        <div class="sum">
+          <strong>Decisions to settle early</strong>
+          <div><span>Amadeus tier</span><span>Self-Service for test, Enterprise for production ticketing</span></div>
+          <div><span>Ticket issuing</span><span>Self-Service creates the order. Consolidator contract needed to issue</span></div>
+          <div><span>Payments</span><span>Take payment on your side, pass form of payment to Amadeus</span></div>
+        </div>
+        <div class="sum">
+          <strong>Hotel specifics</strong>
+          <div><span>Two-step search</span><span>Hotel ids by city, then offers for those ids</span></div>
+          <div><span>Content</span><span>Photos and descriptions are not in the offer call. Store your own</span></div>
+          <div><span>Pay at hotel vs prepaid</span><span>Offers state which. Show it before payment</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const STEPS={flight:['Search','Results','Seats','Passengers','Payment','Confirmation'],hotel:['Search','Results','Rooms','Guests','Payment','Confirmation']};
+const S={mode:'flight',step:0,from:'DEL',to:'BOM',date:'2026-12-12',pax:1,sort:'price',filter:'all',offer:null,seats:[],
+ names:[{first:'Asha',last:'Verma',dob:'1991-04-18',email:'asha@example.com'}],pay:'card',pnr:null,
+ city:'BOM',checkin:'2026-12-12',checkout:'2026-12-14',rooms:1,guests:2,room:null,guest:{first:'Asha',last:'Verma',email:'asha@example.com',phone:'+91 98100 00000'}};
+
+const FLIGHTS=[
+ {id:'F1',carrier:'IndiGo',code:'6E 2131',dep:'06:10',arr:'08:20',dur:'2h 10m',stops:0,price:5890,cls:'Economy',bag:'15 kg',refund:false,aircraft:'A320neo'},
+ {id:'F2',carrier:'Air India',code:'AI 887',dep:'08:45',arr:'10:55',dur:'2h 10m',stops:0,price:6720,cls:'Economy',bag:'25 kg',refund:true,aircraft:'A321'},
+ {id:'F3',carrier:'Vistara',code:'UK 951',dep:'13:30',arr:'15:45',dur:'2h 15m',stops:0,price:7340,cls:'Economy Flex',bag:'20 kg',refund:true,aircraft:'B737-800'},
+ {id:'F4',carrier:'Akasa Air',code:'QP 1104',dep:'17:05',arr:'21:30',dur:'4h 25m',stops:1,price:4960,cls:'Economy',bag:'15 kg',refund:false,aircraft:'B737 MAX'}];
+const HOTELS=[
+ {id:'H1',hotelId:'MCBOM101',name:'Harbour View Residency',area:'Colaba',dist:'1.2 km from Gateway of India',stars:4,score:8.7,reviews:2140,price:6800,refund:true,amen:['Wi-Fi','Pool','Breakfast','Gym'],
+  rooms:[{id:'R1',type:'Deluxe Room',bed:'1 King bed',board:'Room only',cancel:'Free cancellation until 10 Dec',price:6800},{id:'R2',type:'Deluxe Room',bed:'1 King bed',board:'Breakfast included',cancel:'Free cancellation until 10 Dec',price:7600},{id:'R3',type:'Sea View Suite',bed:'1 King bed + sofa',board:'Breakfast included',cancel:'Non-refundable',price:9900}]},
+ {id:'H2',hotelId:'MCBOM102',name:'Marine Lines Hotel',area:'Churchgate',dist:'0.6 km from Churchgate station',stars:3,score:8.1,reviews:960,price:4200,refund:false,amen:['Wi-Fi','Breakfast'],
+  rooms:[{id:'R1',type:'Standard Twin',bed:'2 Single beds',board:'Room only',cancel:'Non-refundable',price:4200},{id:'R2',type:'Standard Double',bed:'1 Queen bed',board:'Breakfast included',cancel:'Non-refundable',price:4650}]},
+ {id:'H3',hotelId:'MCBOM103',name:'Juhu Palm Inn',area:'Juhu',dist:'4 km from the airport',stars:4,score:8.4,reviews:1520,price:5600,refund:true,amen:['Wi-Fi','Pool','Airport shuttle','Breakfast'],
+  rooms:[{id:'R1',type:'Superior Room',bed:'1 King bed',board:'Breakfast included',cancel:'Free cancellation until 11 Dec',price:5600},{id:'R2',type:'Family Room',bed:'2 Queen beds',board:'Breakfast included',cancel:'Free cancellation until 11 Dec',price:7900}]},
+ {id:'H4',hotelId:'MCBOM104',name:'Bandra Courtyard',area:'Bandra West',dist:'0.4 km from Bandstand',stars:5,score:9.2,reviews:3310,price:12400,refund:true,amen:['Wi-Fi','Pool','Spa','Gym','Breakfast'],
+  rooms:[{id:'R1',type:'Executive Room',bed:'1 King bed',board:'Breakfast included',cancel:'Free cancellation until 11 Dec',price:12400},{id:'R2',type:'Club Suite',bed:'1 King bed',board:'Breakfast and lounge',cancel:'Free cancellation until 9 Dec',price:17800}]}];
+const CITY={DEL:'Delhi',BOM:'Mumbai',BLR:'Bengaluru',HYD:'Hyderabad',GOA:'Goa',MAA:'Chennai'};
+const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const isF=()=>S.mode==='flight';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nights=()=>Math.max(1,Math.round((new Date(S.checkout)-new Date(S.checkin))/864e5));
+const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+function json(o){return esc(JSON.stringify(o,null,2)).replace(/&quot;([^&]+?)&quot;:/g,'<span class="k">"$1"</span>:').replace(/: &quot;([^&]*?)&quot;/g,': <span class="s">"$1"</span>');}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,1800);}
+
+/* pricing */
+const roomBase=()=>S.room?S.room.price*nights()*S.rooms:0;
+const taxes=()=>Math.round(roomBase()*0.12);
+function seatTotals(){return S.seats.length*300;}
+function total(){return isF()?(S.offer?S.offer.price:0)*S.pax+seatTotals():roomBase()+taxes();}
+
+/* ---------- API inspector ---------- */
+function calls(){
+ const o=S.offer,A='am',Y='own';
+ if(isF()){const f=o||FLIGHTS[0];return [
+ [{src:A,v:'POST',u:'/v1/security/oauth2/token',d:'Your backend gets a short-lived access token (about 30 min) with the API key and secret. The browser never sees these.',j:{grant_type:'client_credentials',client_id:'<API_KEY>',client_secret:'<API_SECRET>'}},
+  {src:A,v:'GET',u:'/v1/reference-data/locations?subType=AIRPORT,CITY&keyword=DEL',d:'Powers the From and To autocomplete as the traveller types.',j:{data:[{iataCode:'DEL',name:'INDIRA GANDHI INTL',address:{cityName:'DELHI',countryCode:'IN'}}]}}],
+ [{src:A,v:'POST',u:'/v2/shopping/flight-offers',d:'Returns priced offers for the route and date. Sorting and filtering by stops or airline happen on your side.',j:{currencyCode:'INR',originDestinations:[{id:'1',originLocationCode:S.from,destinationLocationCode:S.to,departureDateTimeRange:{date:S.date}}],travelers:[{id:'1',travelerType:'ADULT'}],sources:['GDS'],searchCriteria:{maxFlightOffers:50}}},
+  {src:Y,v:'CACHE',u:'offers:'+S.from+'-'+S.to+':'+S.date,d:'Cache results a few minutes to save API quota. Fares change, so re-price before booking.',j:{ttl_seconds:300}}],
+ [{src:A,v:'POST',u:'/v1/shopping/flight-offers/pricing',d:'Confirms the chosen fare is still available and returns the final price with taxes.',j:{data:{type:'flight-offers-pricing',flightOfferIds:[f.id]},priced:{grandTotal:f.price+'.00',currency:'INR'}}},
+  {src:A,v:'POST',u:'/v1/shopping/seatmaps',d:'Returns the cabin layout, seat status and paid-seat prices for the selected flight.',j:{data:[{type:'seatmap',number:f.code,decks:[{deckType:'MAIN',seats:'…'}]}]}}],
+ [{src:Y,v:'POST',u:'/api/travellers/validate',d:'Checks names against passport rules and email format before anything goes to the airline.',j:{first:S.names[0].first,last:S.names[0].last,dob:S.names[0].dob}}],
+ [{src:Y,v:'POST',u:'/api/payments/intent',d:'Your payment gateway charges the card. Only after success do you create the order with Amadeus.',j:{amount:total(),currency:'INR',method:S.pay}}],
+ [{src:A,v:'POST',u:'/v1/booking/flight-orders',d:'Creates the booking. The response holds the order id and the airline record locator (PNR).',j:{data:{type:'flight-order',flightOffers:['<priced offer>'],travelers:[{id:'1',name:{firstName:S.names[0].first,lastName:S.names[0].last}}]}}},
+  {src:A,v:'GET',u:'/v1/booking/flight-orders/{orderId}',d:'Use for the My Trips page and status checks. Cancel with DELETE on the same path.',j:{data:{id:'eJzTd9cPDPMwDgwEAAr',associatedRecords:[{reference:S.pnr||'K7QX2M'}]}}}]][S.step];}
+ const h=o||HOTELS[0],r=S.room||h.rooms[0];
+ return [
+ [{src:A,v:'GET',u:'/v1/reference-data/locations?subType=CITY&keyword=MUM',d:'City autocomplete for the destination field.',j:{data:[{iataCode:'BOM',name:'MUMBAI',address:{countryCode:'IN'}}]}},
+  {src:A,v:'GET',u:'/v1/reference-data/locations/hotels/by-city?cityCode='+S.city,d:'Returns the list of hotel ids in the city. You need these ids for the next call.',j:{data:[{hotelId:'MCBOM101',name:'HARBOUR VIEW RESIDENCY',iataCode:S.city,geoCode:{latitude:18.92,longitude:72.83}}]}}],
+ [{src:A,v:'GET',u:'/v3/shopping/hotel-offers?hotelIds=MCBOM101,MCBOM102&checkInDate='+S.checkin+'&checkOutDate='+S.checkout+'&adults='+S.guests+'&roomQuantity='+S.rooms+'&currency=INR',d:'Returns available rooms and prices for those hotels and dates. Send ids in batches, since there is a limit per call.',j:{data:[{type:'hotel-offers',hotel:{hotelId:'MCBOM101'},available:true,offers:[{id:'ZX81LQ',price:{currency:'INR',total:String(HOTELS[0].price*nights())}}]}]}},
+  {src:A,v:'GET',u:'/v2/e-reputation/hotel-sentiments?hotelIds=MCBOM101',d:'Optional. Adds an overall score and category scores (staff, location, sleep) for the star badge.',j:{data:[{hotelId:'MCBOM101',overallRating:87,numberOfReviews:2140}]}},
+  {src:Y,v:'CACHE',u:'hotels:'+S.city+':'+S.checkin+':'+S.checkout,d:'Cache the offer list briefly and keep static content (photos, descriptions) in your own database.',j:{ttl_seconds:300}}],
+ [{src:A,v:'GET',u:'/v3/shopping/hotel-offers/'+(r.id==='R1'?'ZX81LQ':'ZX82MR'),d:'Re-checks the chosen room. Returns the final price, taxes, cancellation and payment policies to show before the guest commits.',j:{data:{available:true,offers:[{checkInDate:S.checkin,checkOutDate:S.checkout,room:{type:r.type},policies:{cancellations:[{description:r.cancel}]},price:{currency:'INR',total:String(roomBase())}}]}}}],
+ [{src:Y,v:'POST',u:'/api/guests/validate',d:'Checks the lead guest name, email and phone before creating the order.',j:{first:S.guest.first,last:S.guest.last,email:S.guest.email}}],
+ [{src:Y,v:'POST',u:'/api/payments/intent',d:'Charge on your side first. The card data is then passed in the hotel order, so use a PCI compliant tokenised flow.',j:{amount:total(),currency:'INR',method:S.pay}}],
+ [{src:A,v:'POST',u:'/v2/booking/hotel-orders',d:'Books the room with the guest details and payment. The response has the booking id and the hotel confirmation number. Check the current Amadeus docs for the exact order body.',j:{data:{type:'hotel-order',guests:[{tid:1,firstName:S.guest.first,lastName:S.guest.last,email:S.guest.email}],roomAssociations:[{guestReferences:[{guestReference:'1'}],hotelOfferId:'ZX81LQ'}]}}},
+  {src:Y,v:'POST',u:'/api/notify/confirmation',d:'Your backend stores the booking and sends the voucher by email and SMS.',j:{to:S.guest.email,confirmation:S.pnr||'HX4821'}}]][S.step];
+}
+const TITLES={flight:['Search for flights','Offer list','Fare check and seat map','Traveller details','Payment','Booking confirmed'],hotel:['Search for hotels','Hotel list','Room and price check','Guest details','Payment','Booking confirmed']};
+function renderInspector(){
+ document.getElementById('insp-title').textContent='Step '+(S.step+1)+': '+TITLES[S.mode][S.step];
+ document.getElementById('insp-chips').innerHTML=isF()?'<span class="chip am">Amadeus Flight APIs</span>':'<span class="chip am">Amadeus Hotel APIs</span>';
+ const cs=calls();
+ document.getElementById('insp-body').innerHTML=cs.map((c,i)=>`<div class="call">
+  <div class="verb"><span class="chip ${c.src}">${c.src==='am'?'Amadeus':'Own'}</span><b>${c.v}</b><code>${esc(c.u)}</code></div>
+  <p>${c.d}</p><details ${i===0?'open':''}><summary>Sample payload</summary><pre>${json(c.j)}</pre></details></div>`).join('');
+}
+
+/* ---------- screens ---------- */
+const sortedFlights=()=>{let l=[...FLIGHTS];if(S.filter==='direct')l=l.filter(x=>x.stops===0);if(S.filter==='refund')l=l.filter(x=>x.refund);
+  l.sort((a,b)=>S.sort==='price'?a.price-b.price:a.dep.localeCompare(b.dep));return l;};
+const sortedHotels=()=>{let l=[...HOTELS];if(S.filter==='direct')l=l.filter(x=>x.stars>=4);if(S.filter==='refund')l=l.filter(x=>x.refund);
+  l.sort((a,b)=>S.sort==='price'?a.price-b.price:b.score-a.score);return l;};
+
+function seatMap(){
+ const rows=12,letters=['A','B','C','D','E','F'],taken=new Set(['2B','3A','3C','5D','6E','6F','8A','9B','9C','11D']);
+ let h=`<div class="cabin" role="group" aria-label="Seat map">`;
+ for(let r=1;r<=rows;r++){h+=`<div class="srow">`;
+  letters.forEach((l,i)=>{if(i===3)h+=`<span class="n">${r}</span>`;
+   const id=r+l,t=taken.has(id),s=S.seats.includes(id),prem=r<=3;
+   h+=`<button class="seat ${t?'taken':''} ${prem?'prem':''} ${s?'sel':''}" data-seat="${id}" ${t?'disabled':''} aria-pressed="${s}" aria-label="Seat ${id}${t?' taken':''}">${t?'':l}</button>`;});
+  h+='</div>';}
+ return h+'</div>';
+}
+let maxStep=0;
+function field(id,label,val,type){return `<label class="f">${label}<input id="${id}" type="${type||'text'}" value="${esc(val)}"></label>`;}
+
+function render(){
+ const F=isF(),o=S.offer,p=document.getElementById('pane');
+ document.body.dataset.mode=S.mode;
+ document.getElementById('tab-flight').setAttribute('aria-selected',F);
+ document.getElementById('tab-hotel').setAttribute('aria-selected',!F);
+ document.getElementById('stepper').innerHTML=STEPS[S.mode].map((s,i)=>`<button data-step="${i}" ${i===S.step?'aria-current="step"':''} class="${i<S.step?'done':''}" ${i>maxStep?'disabled':''}>${i+1}. ${s}</button>`).join('');
+ const filters=(a,b)=>`<div class="filters" role="group" aria-label="Filters">
+    <button data-sort="price" aria-pressed="${S.sort==='price'}">Cheapest</button>
+    <button data-sort="time" aria-pressed="${S.sort==='time'}">${F?'Earliest':'Top rated'}</button>
+    <button data-filter="${S.filter==='direct'?'all':'direct'}" aria-pressed="${S.filter==='direct'}">${a}</button>
+    <button data-filter="${S.filter==='refund'?'all':'refund'}" aria-pressed="${S.filter==='refund'}">${b}</button></div>`;
+
+ if(S.step===0){
+  p.innerHTML=F?`<h2>Where are you flying?</h2><p class="sub">Type a city or airport code. Suggestions load from Amadeus.</p>
+  <div class="grid2">${field('from','From',S.from)}${field('to','To',S.to)}</div>
+  <div class="grid3">${field('date','Date',S.date,'date')}
+   <label class="f">Travellers<select id="pax">${[1,2,3,4].map(n=>`<option ${n===S.pax?'selected':''}>${n}</option>`).join('')}</select></label>
+   <label class="f">Cabin<select id="cabin">${['Economy','Premium economy','Business'].map(x=>`<option>${x}</option>`).join('')}</select></label></div>
+  <div class="row"><span class="sub">${CITY[S.from]||S.from} to ${CITY[S.to]||S.to}</span><button class="btn" id="go">Search flights</button></div>`
+  :`<h2>Where are you staying?</h2><p class="sub">Choose a city. Hotel ids for the city load first, then prices for your dates.</p>
+  <div class="grid2">${field('city','City',S.city)}<label class="f">Guests<select id="guests">${[1,2,3,4,5,6].map(n=>`<option ${n===S.guests?'selected':''}>${n}</option>`).join('')}</select></label></div>
+  <div class="grid3">${field('cin','Check in',S.checkin,'date')}${field('cout','Check out',S.checkout,'date')}
+   <label class="f">Rooms<select id="rooms">${[1,2,3].map(n=>`<option ${n===S.rooms?'selected':''}>${n}</option>`).join('')}</select></label></div>
+  <div class="row"><span class="sub">${CITY[S.city]||S.city} · ${nights()} night${nights()>1?'s':''}</span><button class="btn" id="go">Search hotels</button></div>`;
+ }
+ if(S.step===1){
+  if(F){const l=sortedFlights();
+   p.innerHTML=`<div class="row"><div><h2>${CITY[S.from]||S.from} to ${CITY[S.to]||S.to}</h2><p class="sub">${S.date} · ${S.pax} traveller${S.pax>1?'s':''} · ${l.length} offers</p></div>${filters('Non-stop','Refundable')}</div>
+   ${l.map(x=>`<button class="offer" data-offer="${x.id}" aria-pressed="${!!o&&o.id===x.id}">
+    <div class="line"><span class="time">${x.dep}</span><span class="path">${x.dur}<i></i>${x.stops===0?'Non-stop':x.stops+' stop'}</span><span class="time">${x.arr}</span></div>
+    <div class="row"><span><strong>${x.carrier}</strong> <span class="sub">${esc(x.code)}</span></span><span class="price">${fmt(x.price)}</span></div>
+    <div class="meta"><span class="tag">${x.cls}</span><span class="tag">${x.bag}</span><span class="tag ${x.refund?'good':''}">${x.refund?'Refundable':'Non-refundable'}</span><span class="tag">${esc(x.aircraft)}</span></div></button>`).join('')||'<p class="sub">No results match these filters.</p>'}
+   <div class="row"><button class="btn ghost" data-go="0">Change search</button><button class="btn" id="next" ${o?'':'disabled'}>Select and continue</button></div>`;
+  }else{const l=sortedHotels();
+   p.innerHTML=`<div class="row"><div><h2>Hotels in ${CITY[S.city]||S.city}</h2><p class="sub">${S.checkin} to ${S.checkout} · ${nights()} night${nights()>1?'s':''} · ${S.guests} guest${S.guests>1?'s':''} · ${l.length} hotels</p></div>${filters('4 stars and up','Free cancellation')}</div>
+   ${l.map(h=>`<button class="offer" data-offer="${h.id}" aria-pressed="${!!o&&o.id===h.id}">
+    <div class="row"><strong style="font-family:var(--font-d);font-size:17px">${esc(h.name)}</strong><span class="score">${h.score}</span></div>
+    <div class="meta"><span style="color:var(--hotel)">${stars(h.stars)}</span><span>${esc(h.area)} · ${esc(h.dist)}</span><span>${h.reviews.toLocaleString('en-IN')} reviews</span></div>
+    <div class="meta">${h.amen.map(a=>`<span class="tag">${a}</span>`).join('')}</div>
+    <div class="row"><span class="tag ${h.refund?'good':''}">${h.refund?'Free cancellation available':'Non-refundable rates'}</span><span><span class="sub">from</span> <span class="price">${fmt(h.price)}</span> <span class="sub">/ night</span></span></div></button>`).join('')||'<p class="sub">No hotels match these filters.</p>'}
+   <div class="row"><button class="btn ghost" data-go="0">Change search</button><button class="btn" id="next" ${o?'':'disabled'}>View rooms</button></div>`;}
+ }
+ if(S.step===2){
+  if(F){p.innerHTML=`<h2>Choose your seat</h2>
+  <p class="sub">${esc(o.carrier)} · ${esc(o.code)} · fare confirmed at ${fmt(o.price)} per traveller. Paid seats ₹300 each.</p>
+  <div class="key"><span>Free</span><span class="p">Extra legroom</span><span class="s">Yours</span><span class="t">Taken</span></div>${seatMap()}
+  <div class="row"><span class="sub">Selected: <strong>${S.seats.join(', ')||'none'}</strong> (up to ${S.pax})</span><span><button class="btn ghost" data-go="1">Back</button> <button class="btn" id="next">Continue</button></span></div>`;}
+  else{p.innerHTML=`<h2>${esc(o.name)}</h2><p class="sub"><span style="color:var(--hotel)">${stars(o.stars)}</span> · ${esc(o.area)} · ${S.checkin} to ${S.checkout}</p>
+  <div class="gallery" aria-hidden="true"><i></i><i></i><i></i></div>
+  ${o.rooms.map(r=>`<button class="offer" data-room="${r.id}" aria-pressed="${!!S.room&&S.room.id===r.id}">
+   <div class="row"><strong>${esc(r.type)}</strong><span class="price">${fmt(r.price)}<span class="sub" style="font-size:12px;font-weight:400"> / night</span></span></div>
+   <div class="meta"><span class="tag">${esc(r.bed)}</span><span class="tag">${esc(r.board)}</span><span class="tag ${r.cancel.startsWith('Free')?'good':''}">${esc(r.cancel)}</span></div>
+   <div class="sub">${nights()} night${nights()>1?'s':''} × ${S.rooms} room${S.rooms>1?'s':''} = ${fmt(r.price*nights()*S.rooms)} before taxes</div></button>`).join('')}
+  <div class="row"><button class="btn ghost" data-go="1">Back</button><button class="btn" id="next" ${S.room?'':'disabled'}>Continue</button></div>`;}
+ }
+ if(S.step===3){
+  if(F){while(S.names.length<S.pax)S.names.push({first:'',last:'',dob:'',email:''});
+  p.innerHTML=`<h2>Who is travelling?</h2><p class="sub">Enter names exactly as on the passport or government ID.</p>
+  ${S.names.slice(0,S.pax).map((n,i)=>`<div class="pass"><strong>Traveller ${i+1}</strong><div class="grid2">
+   <label class="f">First name<input data-n="${i}" data-k="first" id="f${i}" value="${esc(n.first)}"></label>
+   <label class="f">Last name<input data-n="${i}" data-k="last" id="l${i}" value="${esc(n.last)}"></label>
+   <label class="f">Date of birth<input type="date" data-n="${i}" data-k="dob" id="d${i}" value="${n.dob}"></label>
+   <label class="f">${i===0?'Contact email':'Nationality'}<input data-n="${i}" data-k="email" id="e${i}" value="${esc(n.email)}"></label></div></div>`).join('')}
+  <div class="row"><button class="btn ghost" data-go="2">Back</button><button class="btn" id="next">Continue to payment</button></div>`;}
+  else{p.innerHTML=`<h2>Who is the lead guest?</h2><p class="sub">The hotel checks this name at the front desk. We send the voucher to the email below.</p>
+  <div class="pass"><div class="grid2">
+   <label class="f">First name<input data-g="first" id="gf" value="${esc(S.guest.first)}"></label>
+   <label class="f">Last name<input data-g="last" id="gl" value="${esc(S.guest.last)}"></label>
+   <label class="f">Email<input data-g="email" id="ge" value="${esc(S.guest.email)}"></label>
+   <label class="f">Phone<input data-g="phone" id="gp" value="${esc(S.guest.phone)}"></label></div>
+   <label class="f">Special requests (not guaranteed)<input data-g="note" id="gn" value="${esc(S.guest.note||'High floor, late check-in')}"></label></div>
+  <div class="row"><button class="btn ghost" data-go="2">Back</button><button class="btn" id="next">Continue to payment</button></div>`;}
+ }
+ if(S.step===4){
+  const lines=F?`<div><span>${esc(o.carrier)} ${esc(o.code)}</span><span>${o.dep} → ${o.arr}</span></div>
+   <div><span>Fare × ${S.pax}</span><span>${fmt(o.price*S.pax)}</span></div><div><span>Seats (${S.seats.length})</span><span>${fmt(seatTotals())}</span></div>`
+  :`<div><span>${esc(o.name)}</span><span>${esc(S.room.type)}</span></div>
+   <div><span>${fmt(S.room.price)} × ${nights()} nights × ${S.rooms} room${S.rooms>1?'s':''}</span><span>${fmt(roomBase())}</span></div><div><span>Taxes and fees (12%)</span><span>${fmt(taxes())}</span></div>`;
+  p.innerHTML=`<h2>Review and pay</h2><div class="sum">${lines}<div class="tot"><span>Total</span><span>${fmt(total())}</span></div></div>
+  <div class="pay-methods" role="group" aria-label="Payment method">${['card','upi','netbanking'].map(m=>`<button data-pay="${m}" aria-pressed="${S.pay===m}">${{card:'Card',upi:'UPI',netbanking:'Net banking'}[m]}</button>`).join('')}</div>
+  ${S.pay==='card'?`<div class="grid2">${field('cn','Card number','4111 1111 1111 1111')}${field('cx','Expiry and CVV','12/29  ···')}</div>`:field('alt',S.pay==='upi'?'UPI ID':'Bank',S.pay==='upi'?'asha@okbank':'Example Bank')}
+  <p class="sub">${F?'Fare is re-checked with Amadeus right before the order is created.':'The room is re-checked with Amadeus right before the order is created.'} Test payment only.</p>
+  <div class="row"><button class="btn ghost" data-go="3">Back</button><button class="btn" id="pay">Pay ${fmt(total())}</button></div>`;
+ }
+ if(S.step===5){
+  S.pnr=S.pnr||(F?'K7QX2M':'HX4821');
+  p.innerHTML=F?`<h2 class="ok">Flight booked</h2><p class="sub">Confirmation sent to ${esc(S.names[0].email||'your email')}.</p>
+  <div class="ticket"><div class="row"><span class="chip">E-ticket</span><span class="sub">Booking ref</span></div><div class="big">${S.pnr}</div>
+   <div class="grid2"><div><span class="sub">From</span><div class="time">${S.from} ${o.dep}</div></div><div><span class="sub">To</span><div class="time">${S.to} ${o.arr}</div></div></div>
+   <div class="meta"><span class="tag">${esc(o.carrier)} ${esc(o.code)}</span><span class="tag">${S.date}</span><span class="tag">Seats: ${S.seats.join(', ')||'at check-in'}</span><span class="tag">${S.names.slice(0,S.pax).map(n=>esc(n.first+' '+n.last)).join(', ')}</span></div><div class="barcode" aria-hidden="true"></div></div>
+  <div class="notice">Arriving in ${CITY[S.to]||S.to}? Add a hotel for the same dates in one tap.</div>
+  <div class="row"><button class="btn ghost" id="cancel">Cancel booking</button><button class="btn" id="addhotel">Add a hotel in ${CITY[S.to]||S.to}</button></div>`
+  :`<h2 class="ok">Hotel booked</h2><p class="sub">Voucher sent to ${esc(S.guest.email)}. Show it at check-in with a photo ID.</p>
+  <div class="ticket"><div class="row"><span class="chip">Hotel voucher</span><span class="sub">Confirmation no</span></div><div class="big">${S.pnr}</div>
+   <div><strong style="font-family:var(--font-d);font-size:18px">${esc(o.name)}</strong><div class="sub">${esc(o.area)} · ${esc(o.dist)}</div></div>
+   <div class="grid2"><div><span class="sub">Check in</span><div class="time">${S.checkin}</div><span class="sub">from 14:00</span></div><div><span class="sub">Check out</span><div class="time">${S.checkout}</div><span class="sub">until 11:00</span></div></div>
+   <div class="meta"><span class="tag">${esc(S.room.type)}</span><span class="tag">${esc(S.room.board)}</span><span class="tag">${S.guests} guests</span><span class="tag">${esc(S.guest.first+' '+S.guest.last)}</span></div><div class="barcode" aria-hidden="true"></div></div>
+  <div class="row"><button class="btn ghost" id="cancel">Cancel booking</button><button class="btn" data-go="0">Book another stay</button></div>`;
+ }
+ renderInspector();
+}
+function go(n){S.step=n;maxStep=Math.max(maxStep,n);render();}
+function reset(mode){S.mode=mode;S.offer=null;S.seats=[];S.room=null;S.pnr=null;S.step=0;maxStep=0;}
+
+document.addEventListener('click',e=>{
+ const t=e.target.closest('button');if(!t)return;
+ if(t.id==='tab-flight')return(reset('flight'),render());
+ if(t.id==='tab-hotel')return(reset('hotel'),render());
+ if(t.id==='addhotel'){const to=S.to;reset('hotel');S.city=to;S.checkin=S.date;const d=new Date(S.date);d.setDate(d.getDate()+2);S.checkout=d.toISOString().slice(0,10);return go(1);}
+ if(t.dataset.step!==undefined){const n=+t.dataset.step;if(n<=maxStep)return go(n);}
+ if(t.id==='go'){const v=id=>document.getElementById(id).value;
+  if(isF()){S.from=(v('from')||'DEL').toUpperCase();S.to=(v('to')||'BOM').toUpperCase();S.date=v('date')||S.date;S.pax=+v('pax');S.seats=[];}
+  else{S.city=(v('city')||'BOM').toUpperCase();S.checkin=v('cin')||S.checkin;S.checkout=v('cout')||S.checkout;
+   if(new Date(S.checkout)<=new Date(S.checkin)){toast('Check out must be after check in');return;}S.guests=+v('guests');S.rooms=+v('rooms');S.room=null;}
+  S.offer=null;maxStep=0;return go(1);}
+ if(t.dataset.offer){S.offer=(isF()?FLIGHTS:HOTELS).find(x=>x.id===t.dataset.offer);S.room=null;return render();}
+ if(t.dataset.room){S.room=S.offer.rooms.find(x=>x.id===t.dataset.room);return render();}
+ if(t.dataset.sort){S.sort=t.dataset.sort;return render();}
+ if(t.dataset.filter){S.filter=t.dataset.filter;return render();}
+ if(t.dataset.go!==undefined)return go(+t.dataset.go);
+ if(t.dataset.seat){const id=t.dataset.seat,i=S.seats.indexOf(id);
+  if(i>=0)S.seats.splice(i,1);else if(S.seats.length<S.pax)S.seats.push(id);else toast('You can pick '+S.pax+' seat'+(S.pax>1?'s':'')+' only');return render();}
+ if(t.dataset.pay){S.pay=t.dataset.pay;return render();}
+ if(t.id==='next'){
+  if(S.step===3){
+   if(isF()){const bad=S.names.slice(0,S.pax).some(n=>!n.first||!n.last||!n.dob);if(bad||!S.names[0].email.includes('@')){toast('Fill every name, date of birth and a valid email');return;}}
+   else if(!S.guest.first||!S.guest.last||!S.guest.email.includes('@')||!S.guest.phone){toast('Fill name, a valid email and phone');return;}}
+  return go(S.step+1);}
+ if(t.id==='pay'){t.disabled=true;t.textContent='Processing…';setTimeout(()=>go(5),900);return;}
+ if(t.id==='cancel'){toast('Cancelled. Refund started (mock)');const m=S.mode;reset(m);return render();}
+});
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.dataset.n!==undefined)S.names[+t.dataset.n][t.dataset.k]=t.value;
+ if(t.dataset.g!==undefined)S.guest[t.dataset.g]=t.value;});
+render();
+</script>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marichi Pulse: flights and hotels in Zambia</title>
+  <link rel="icon" type="image/jpeg" href="/img/favicon.jpg">
+  <meta name="description" content="Book flights and hotels in one place.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body data-mode="flight">
+  <a class="skip" href="#app">Skip to content</a>
+  <header class="site">
+    <div class="site-in">
+      <a class="brand" href="#/" aria-label="Marichi Pulse home"><img class="brand-logo" src="/img/logo.jpg" alt="Marichi Pulse by Marichi Labs" width="135" height="44"></a>
+      <nav aria-label="Main">
+        <a href="#/" data-nav="flights">Flights</a>
+        <a href="#/?tab=hotels" data-nav="hotels">Hotels</a>
+        <a href="#/planner" data-nav="planner">Trip planner</a>
+        <a href="#/trips" data-nav="trips">My trips</a>
+      </nav>
+      <div id="account"></div>
+    </div>
+  </header>
+  <div id="demo-banner" class="demo" hidden>Demo mode: results are sample data and nothing is really booked. Add Amadeus keys in <code>.env</code> to go live.</div>
+  <main id="app" tabindex="-1">
+    <div class="card" style="padding:24px;margin-top:20px"><h2>Loading Marichi Pulse…</h2>
+      <p class="muted" style="margin-top:8px">If this message stays, the page was opened as a file. Start the server instead: double-click <b>start.command</b> in the project folder, or run <code>npm start</code>, then open <b>http://localhost:3000</b> in your browser.</p></div></main>
+  <footer class="site-foot"><div class="site-in"><span>© Marichi Labs · Lusaka, Zambia</span><span class="muted">Prices in Zambian Kwacha (ZMW), VAT included</span></div></footer>
+  <div id="modal-root"></div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

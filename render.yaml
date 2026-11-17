@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: marichi-pulse
+    runtime: docker
+    plan: starter          # paid plan is needed for the persistent disk
+    region: frankfurt
+    healthCheckPath: /
+    disk:
+      name: pulse-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_PATH
+        value: /data/pulse.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CURRENCY
+        value: ZMW
+      - key: SEED_DEMO
+        value: "true"       # set to "false" before real customers
+      - key: ADMIN_EMAIL
+        value: admin@yourdomain.com
+      - key: ADMIN_PASSWORD
+        sync: false         # you type this in the Render dashboard
